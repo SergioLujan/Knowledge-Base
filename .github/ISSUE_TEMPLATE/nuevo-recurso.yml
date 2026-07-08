@@ -1,5 +1,5 @@
 name: 📎 Nuevo recurso
-description: Agrega una página o recurso web a la base de conocimiento
+description: Agrega una página o recurso web a la base de conocimiento (solo pega el link)
 title: "[Nuevo recurso] "
 labels: ["nuevo-recurso"]
 body:
@@ -7,33 +7,16 @@ body:
     id: link
     attributes:
       label: Link
-      description: URL completa de la página
+      description: Pega la URL completa. El título y la descripción se obtienen automáticamente de la página.
       placeholder: "https://ejemplo.com"
-    validations:
-      required: true
-
-  - type: input
-    id: titulo
-    attributes:
-      label: Título
-      description: Nombre corto del recurso
-      placeholder: "Nombre de la página o herramienta"
-    validations:
-      required: true
-
-  - type: textarea
-    id: descripcion
-    attributes:
-      label: Descripción
-      description: ¿De qué trata? ¿Por qué aporta valor?
     validations:
       required: true
 
   - type: input
     id: categoria
     attributes:
-      label: Categoría / Etiquetas
-      description: Palabras clave separadas por coma
+      label: Categoría / Etiquetas (opcional)
+      description: Si lo dejas vacío, se marcará como "Por clasificar"
       placeholder: "educación, cursos, gratis"
     validations:
       required: false
@@ -41,7 +24,7 @@ body:
   - type: textarea
     id: notas
     attributes:
-      label: Notas
-      description: Observaciones adicionales (opcional)
+      label: Notas (opcional)
+      description: ¿Por qué te interesa este link? ¿Para qué lo quieres usar?
     validations:
       required: false
