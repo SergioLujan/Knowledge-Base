@@ -1,0 +1,80 @@
+name: Agregar recurso a la base de conocimiento
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  agregar-recurso:
+    if: contains(github.event.issue.labels.*.name, 'nuevo-recurso')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Procesar issue y actualizar recursos.md
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = context.payload.issue.body;
+
+            function extractField(label) {
+              const regex = new RegExp(`### ${label}\\s*\\n+([^\\n#]+(?:\\n(?!###)[^\\n]*)*)`, 'i');
+              const match = body.match(regex);
+              return match ? match[1].trim() : '';
+            }
+
+            const link = extractField('Link');
+            const titulo = extractField('Título');
+            const descripcion = extractField('Descripción');
+            const categoria = extractField('Categoría / Etiquetas') || '_(sin categoría)_';
+            const notas = extractField('Notas') || '_(sin notas)_';
+
+            const fecha = new Date().toISOString().split('T')[0];
+
+            let dominio;
+            try {
+              dominio = new URL(link).hostname.replace('www.', '');
+            } catch {
+              dominio = link;
+            }
+
+            const nuevaFila = `| ${fecha} | ${titulo} | [${dominio}](${link}) | ${descripcion} | ${categoria} | ${notas} |`;
+
+            const path = 'recursos.md';
+            let contenido = fs.readFileSync(path, 'utf8');
+            const lineas = contenido.split('\n');
+            const idxSeparador = lineas.findIndex(l => l.startsWith('|---'));
+            lineas.splice(idxSeparador + 1, 0, nuevaFila);
+            contenido = lineas.join('\n');
+            fs.writeFileSync(path, contenido);
+
+      - name: Commit y push de los cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add recursos.md
+          git commit -m "Agrega nuevo recurso vía issue #${{ github.event.issue.number }}"
+          git push
+
+      - name: Cerrar el issue y confirmar
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              state: 'closed'
+            });
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: '✅ Recurso agregado a `recursos.md`. ¡Gracias!'
+            });
